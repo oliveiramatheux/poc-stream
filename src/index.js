@@ -1,38 +1,47 @@
-import { readFileSync, createWriteStream, createReadStream } from 'fs'
-import { getRandomCountryCode } from './utils/utils.js'
+import { pipeline, Transform } from 'stream'
+import { promisify } from 'util'
+import { readCsv } from './jobs/index.js'
 
-// https://restcountries.com/ api for get country code
-// https://www.mockaroo.com/ site for generate biggest mocks
+const pipelineStream = promisify(pipeline)
 
-const countryCodes = JSON.parse(readFileSync('src/data/codes.json'))
+const tranformStreamSplitByLine = () => new Transform({
+  objectMode: true,
+  transform (chunk, _encoding, callback) {
+    for (const line of chunk.toString().split('\n')) {
+      this.push(line)
+    }
+    callback()
+  }
+})
 
-const totalLines = 100
-const nameFile = 'data'
-const filePath = `src/data/${nameFile}.csv`
-
-const writeStream = createWriteStream(filePath)
-
-writeStream.write('id,first_name,last_name,gender,country_code\n')
-
-for (let index = 0; index < totalLines; index++) {
-  writeStream.write(`${index + 1},matheus,oliveira,male,${countryCodes[getRandomCountryCode(0, countryCodes.length - 1)]}\n`)
-}
-
-writeStream.end()
-
-console.log(`generate ${nameFile}.csv`)
-
-createReadStream(filePath, { encoding: 'utf-8' })
-  .on('data', (chunk) => {
-    const countryCode = chunk.toString().split('\n')
-    for (const data of countryCode) {
-      const code = data.split(',')
-      console.log(code[code.length - 1])
+const tranformStreamMappedObject = () => {
+  const transform = new Transform({
+    objectMode: true,
+    transform (chunk, _encoding, callback) {
+      if (this.count === 0) {
+        this.count += 1
+        return callback()
+      }
+      callback(null, {
+        id: chunk.split(',')[0]
+      })
     }
   })
-  .on('error', (error) => {
-    console.log(error)
-  })
-  .on('end', function () {
-    console.log('read process finished')
-  })
+  transform.count = 0
+  return transform
+}
+
+const tranformStreamPrint = () => new Transform({
+  objectMode: true,
+  transform (chunk, _encoding, callback) {
+    console.log(chunk)
+    callback()
+  }
+})
+
+await pipelineStream(
+  readCsv,
+  tranformStreamSplitByLine(),
+  tranformStreamMappedObject(),
+  tranformStreamPrint()
+)

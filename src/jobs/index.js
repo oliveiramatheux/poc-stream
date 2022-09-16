@@ -1,7 +1,9 @@
 import readCsv from './read-csv.js'
+import { getCountryName } from './getCountryName.js'
 
 export {
-  readCsv
+  readCsv,
+  getCountryName
 }
 
 // ler o arquivo

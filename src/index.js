@@ -1,7 +1,7 @@
 import transformCsvToJson from 'csv-parser'
 import { pipeline, Transform } from 'stream'
 import { promisify } from 'util'
-import { readCsv, getCountryName } from './jobs/index.js'
+import { readCsv, getCountryName, aggregate } from './jobs/index.js'
 
 const pipelineStream = promisify(pipeline)
 
@@ -16,6 +16,7 @@ const tranformStreamPrint = () => new Transform({
 await pipelineStream(
   readCsv,
   transformCsvToJson(),
+  aggregate(),
   getCountryName,
   tranformStreamPrint()
 )

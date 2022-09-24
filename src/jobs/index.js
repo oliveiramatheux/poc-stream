@@ -1,9 +1,11 @@
 import readCsv from './read-csv.js'
 import { getCountryName } from './getCountryName.js'
+import { aggregate } from './aggregate.js'
 
 export {
   readCsv,
-  getCountryName
+  getCountryName,
+  aggregate
 }
 
 // ler o arquivo

@@ -19,26 +19,44 @@ import { Transform } from 'stream'
 //   }
 // })
 
-async function * getCountryNameRequest (chunk) {
-  for await (const item of chunk) {
+// async function * getCountryNameRequest (chunk) {
+//   for await (const item of chunk) {
+//     const { country_code: countryCode } = item
+//     const { data } = await axios.get(`https://restcountries.com/v3.1/alpha?codes=${countryCode}`).catch(() => ({ data: [] }))
+//     const [country] = data
+//     yield ({ ...item, country_name: country?.name?.common || '' })
+//   }
+// }
+
+// const getCountryName = new Transform({
+//   objectMode: true,
+//   transform (chunk, _encoding, callback) {
+//     const getCountryNameOperator = async () => {
+//       const result = getCountryNameRequest(chunk)
+//       for await (const item of result) {
+//         this.push(item)
+//       }
+//       callback()
+//     }
+//     getCountryNameOperator()
+//   }
+// })
+
+const getCountryNameRequest = async (chunk, callback) => {
+  const promisses = chunk.map(async (item) => {
     const { country_code: countryCode } = item
     const { data } = await axios.get(`https://restcountries.com/v3.1/alpha?codes=${countryCode}`).catch(() => ({ data: [] }))
     const [country] = data
-    yield ({ ...item, country_name: country?.name?.common || '' })
-  }
+    return { ...item, country_name: country?.name?.common || '' }
+  })
+  const response = await Promise.all(promisses)
+  callback(null, response)
 }
 
 const getCountryName = new Transform({
   objectMode: true,
   transform (chunk, _encoding, callback) {
-    const getCountryNameOperator = async () => {
-      const result = getCountryNameRequest(chunk)
-      for await (const item of result) {
-        this.push(item)
-      }
-      callback()
-    }
-    getCountryNameOperator()
+    getCountryNameRequest(chunk, callback)
   }
 })
 

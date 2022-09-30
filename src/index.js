@@ -16,7 +16,7 @@ const tranformStreamPrint = () => new Transform({
 await pipelineStream(
   readCsv,
   transformCsvToJson(),
-  aggregate(),
+  aggregate(10),
   getCountryName,
   tranformStreamPrint()
 )

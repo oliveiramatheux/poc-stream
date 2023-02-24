@@ -42,10 +42,12 @@ import { Transform } from 'stream'
 //   }
 // })
 
+const countryNameApiUrl = 'https://restcountries.com/v3.1/alpha'
+
 const getCountryNameRequest = async (chunk, callback) => {
   const promisses = chunk.map(async (item) => {
     const { country_code: countryCode } = item
-    const { data } = await axios.get(`https://restcountries.com/v3.1/alpha?codes=${countryCode}`).catch(() => ({ data: [] }))
+    const { data } = await axios.get(`${countryNameApiUrl}?codes=${countryCode}`).catch(() => ({ data: [] }))
     const [country] = data
     return { ...item, country_name: country?.name?.common || '' }
   })
@@ -60,4 +62,4 @@ const getCountryName = new Transform({
   }
 })
 
-export { getCountryName }
+export { getCountryName, countryNameApiUrl }

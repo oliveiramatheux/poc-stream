@@ -61,7 +61,7 @@ describe('getCountryName', () => {
 
     const result = []
 
-    await pipeline(mockStream, getCountryName, Transform({
+    await pipeline(mockStream, getCountryName(), Transform({
       objectMode: true,
       transform (chunk, _encoding, callback) {
         result.push(chunk)
@@ -97,9 +97,7 @@ describe('getCountryName', () => {
     axios.get.mockResolvedValueOnce({
       data: [
         {
-          name: {
-            common: ''
-          }
+          name: undefined
         }
       ]
     })
@@ -114,7 +112,42 @@ describe('getCountryName', () => {
 
     const result = []
 
-    await pipeline(mockStream, getCountryName, Transform({
+    await pipeline(mockStream, getCountryName(), Transform({
+      objectMode: true,
+      transform (chunk, _encoding, callback) {
+        result.push(chunk)
+        callback()
+      }
+    }))
+
+    expect(result.flat()).toEqual([
+      {
+        country_code: 'BR',
+        country_name: ''
+      }
+    ])
+
+    expect(result.flat().length).toBe(1)
+    expect(axios.get).toBeCalledTimes(1)
+    expect(axios.get).nthCalledWith(1, `${countryNameApiUrl}?codes=BR`)
+  })
+
+  it('should call getCountryName with country code but not return country', async () => {
+    axios.get.mockResolvedValueOnce({
+      data: []
+    })
+
+    const chunckMocked = [
+      [
+        { country_code: 'BR' }
+      ]
+    ]
+
+    const mockStream = Readable.from(chunckMocked)
+
+    const result = []
+
+    await pipeline(mockStream, getCountryName(), Transform({
       objectMode: true,
       transform (chunk, _encoding, callback) {
         result.push(chunk)

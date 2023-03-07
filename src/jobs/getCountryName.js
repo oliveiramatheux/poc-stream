@@ -55,7 +55,7 @@ const getCountryNameRequest = async (chunk, callback) => {
   callback(null, response)
 }
 
-const getCountryName = new Transform({
+const getCountryName = () => new Transform({
   objectMode: true,
   transform (chunk, _encoding, callback) {
     getCountryNameRequest(chunk, callback)

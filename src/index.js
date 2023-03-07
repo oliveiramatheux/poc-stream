@@ -18,7 +18,7 @@ await pipelineStream(
   readCsv,
   transformCsvToJson(),
   aggregate(50),
-  getCountryName,
+  getCountryName(),
   tranformStreamPrint(),
   saveOnCache
 ).finally(() => io.quit())
